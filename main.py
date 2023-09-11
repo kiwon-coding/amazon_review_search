@@ -6,7 +6,12 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
 import os
 import streamlit as st
-
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate
+)
+from langchain import LLMChain
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def prepare():
@@ -49,22 +54,32 @@ if __name__ == "__main__":
 
     openai_api_key = st.session_state.get("OPENAI_API_KEY")
     if openai_api_key:
-        product_list = []
-        for dirname in os.listdir("db"):
-            if not dirname.startswith("."):
-                product_list.append(dirname)
+        chat = ChatOpenAI(openai_api_key = openai_api_key)
+        template = "tanslates {input_language} to {output_language}"
+        system_message_prompt = SystemMessagePromptTemplate.from_template(template)
+        human_template = "{text}"
+        human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+        chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
 
-        # print(product_list)
-        product_id = st.selectbox('Select a product', product_list)
-        if product_id:
-            answer, docs = get_ai_answer(product_id)
-            with st.container():
-                st.subheader("AI Answer")
-                st.write(answer)
+        chain = LLMChain(llm=chat, prompt=chat_prompt)
+        res = chain.run(input_language="English", output_language="Korean", text = "I love programming.")
+        # product_list = []
+        # for dirname in os.listdir("db"):
+        #     if not dirname.startswith("."):
+        #         product_list.append(dirname)
+
+        # # print(product_list)
+        # product_id = st.selectbox('Select a product', product_list)
+        # if product_id:
+        #     answer, docs = get_ai_answer(product_id)
+        #     with st.container():
+        #         st.subheader("AI Answer")
+        #         st.write(answer)
             
-                st.subheader("The answer is based on")
-                for i in docs:
-                    st.write(i)
+        #         st.subheader("The answer is based on")
+        #         for i in docs:
+        #             st.write(i)
+        st.write(res)
     else:
         st.warning("WARNING: Enter your OpenAI API key!")
 

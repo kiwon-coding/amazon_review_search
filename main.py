@@ -42,22 +42,33 @@ if __name__ == "__main__":
     
     st.title("Review Search Engine")
 
-    product_list = []
-    for dirname in os.listdir("db"):
-        if not dirname.startswith("."):
-            product_list.append(dirname)
+    api_key_input = st.text_input("OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY") or st.session_state.get("OPENAI_API_KEY", ""))
+    api_key_button = st.button("Add")
+    if api_key_button:
+        st.session_state["OPENAI_API_KEY"] = api_key_input
 
-    # print(product_list)
-    product_id = st.selectbox('Select a product', product_list)
-    if product_id:
-        answer, docs = get_ai_answer(product_id)
-        with st.container():
-            st.subheader("AI Answer")
-            st.write(answer)
-        
-            st.subheader("The answer is based on")
-            for i in docs:
-                st.write(i)
+    openai_api_key = st.session_state.get("OPENAI_API_KEY")
+    if openai_api_key:
+        product_list = []
+        for dirname in os.listdir("db"):
+            if not dirname.startswith("."):
+                product_list.append(dirname)
+
+        # print(product_list)
+        product_id = st.selectbox('Select a product', product_list)
+        if product_id:
+            answer, docs = get_ai_answer(product_id)
+            with st.container():
+                st.subheader("AI Answer")
+                st.write(answer)
+            
+                st.subheader("The answer is based on")
+                for i in docs:
+                    st.write(i)
+    else:
+        st.warning("WARNING: Enter your OpenAI API key!")
+
+    
 
 
 
